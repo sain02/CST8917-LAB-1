@@ -1,11 +1,17 @@
 # =============================================================================
 # IMPORTS - Libraries we need for our function
 # =============================================================================
+import os
+import uuid
+import datetime
+from azure.cosmos import CosmosClient
 import azure.functions as func  # Azure Functions SDK - required for all Azure Functions
 import logging                  # Built-in Python library for printing log messages
 import json                     # Built-in Python library for working with JSON data
 import re                       # Built-in Python library for Regular Expressions (pattern matching)
 from datetime import datetime   # Built-in Python library for working with dates and times
+
+conn_str = os.environ["DATABASE_CONNECTION_STRING"]
 
 # =============================================================================
 # CREATE THE FUNCTION APP
@@ -166,3 +172,30 @@ def TextAnalyzer(req: func.HttpRequest) -> func.HttpResponse:
             mimetype="application/json",
             status_code=400
         )
+        
+        @app.route(route="GetAnalysisHistory", methods=["GET"])
+def GetAnalysisHistory(req: func.HttpRequest) -> func.HttpResponse:
+
+    limit = req.params.get("limit", "10")
+
+    try:
+        limit = int(limit)
+    except:
+        limit = 10
+
+    query = "SELECT * FROM c ORDER BY c.metadata.analyzedAt DESC"
+
+    items = list(container.query_items(
+        query=query,
+        enable_cross_partition_query=True
+    ))
+
+    results = items[:limit]
+
+    return func.HttpResponse(
+        json.dumps({
+            "count": len(results),
+            "results": results
+        }),
+        mimetype="application/json"
+    )
