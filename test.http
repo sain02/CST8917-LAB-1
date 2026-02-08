@@ -1,0 +1,10 @@
+### Test GET
+GET http://localhost:7071/api/TextAnalyzer?text=Hello world
+
+### Test POST
+POST http://localhost:7071/api/TextAnalyzer
+Content-Type: application/json
+
+{
+  "text": "Hello from Azure"
+}
